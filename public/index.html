@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Service</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #e3f2fd, #ffffff);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding-top: 40px;
+      }
+      .card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px 28px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        width: 560px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 26px;
+        color: #1a237e;
+      }
+      p.subtitle {
+        margin: 0 0 16px;
+        color: #555;
+        font-size: 15px;
+      }
+      .buttons {
+        display: flex;
+        gap: 10px;
+        margin: 16px 0 24px;
+        flex-wrap: wrap;
+      }
+      a.button {
+        text-decoration: none;
+        padding: 10px 16px;
+        background: #1976d2;
+        color: white;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: background 0.2s ease;
+      }
+      a.button:hover {
+        background: #0d47a1;
+      }
+      footer {
+        margin-top: 20px;
+        font-size: 12px;
+        color: #888;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>My Service</h1>
+      <p class="subtitle">Scaffolded by Platform Studio</p>
+
+      <div class="buttons">
+        <a class="button" href="/health" target="_blank">Health</a>
+        <a class="button" href="/docs" target="_blank">API Docs</a>
+        <a class="button" href="/metrics" target="_blank">Metrics</a>
+      </div>
+
+      <footer>API-first · Golden-path scaffold</footer>
+    </div>
+  </body>
+</html>
