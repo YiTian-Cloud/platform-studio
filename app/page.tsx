@@ -89,7 +89,7 @@ export default function HomePage() {
   // NEW: metrics snapshot state for the right-hand panel
   const [metricsPreview, setMetricsPreview] = useState<string>("");
   const [metricsError, setMetricsError] = useState<string | null>(null);
-  const [metricsRows, setMetricsRows] = useState<MetricRow[]>([]);
+ // const [metricsRows, setMetricsRows] = useState<MetricRow[]>([]);
   const [metricsLastUpdated, setMetricsLastUpdated] = useState<string | null>(
     null
   );
@@ -216,45 +216,7 @@ export default function HomePage() {
   }
 
     // Build a simple grouped summary by metric name (min/max/avg)
-    const metricSummary = (() => {
-      if (!metricsRows.length) return [];
-  
-      const byName = new Map<
-        string,
-        { name: string; count: number; min: number; max: number; sum: number }
-      >();
-  
-      for (const row of metricsRows) {
-        const existing = byName.get(row.name);
-        if (!existing) {
-          byName.set(row.name, {
-            name: row.name,
-            count: 1,
-            min: row.value,
-            max: row.value,
-            sum: row.value,
-          });
-        } else {
-          existing.count += 1;
-          existing.sum += row.value;
-          existing.min = Math.min(existing.min, row.value);
-          existing.max = Math.max(existing.max, row.value);
-        }
-      }
-  
-      return Array.from(byName.values())
-        .map((m) => ({
-          ...m,
-          avg: m.sum / m.count,
-        }))
-        .sort((a, b) => b.avg - a.avg) // top by avg
-        .slice(0, 8); // limit for display
-    })();
-  
-    const maxAvgValue =
-      metricSummary.length > 0
-        ? Math.max(...metricSummary.map((m) => Math.abs(m.avg)))
-        : 0;
+
   
   return (
     <main
@@ -768,176 +730,7 @@ export default function HomePage() {
             </div>
           )}
 
-          {metricSummary.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: 11,
-                  color: "#6b7280",
-                  marginBottom: 4,
-                }}
-              >
-                <span>Top metrics by average value</span>
-                <span>Total series: {metricsRows.length}</span>
-              </div>
 
-              <div
-                style={{
-                  border: "1px solid #e5e7eb",
-                  borderRadius: 6,
-                  overflow: "hidden",
-                }}
-              >
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    fontSize: 11,
-                  }}
-                >
-                  <thead
-                    style={{
-                      background: "#f3f4f6",
-                    }}
-                  >
-                    <tr>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "6px 8px",
-                          borderBottom: "1px solid #e5e7eb",
-                        }}
-                      >
-                        Metric
-                      </th>
-                      <th
-                        style={{
-                          textAlign: "right",
-                          padding: "6px 8px",
-                          borderBottom: "1px solid #e5e7eb",
-                        }}
-                      >
-                        Count
-                      </th>
-                      <th
-                        style={{
-                          textAlign: "right",
-                          padding: "6px 8px",
-                          borderBottom: "1px solid #e5e7eb",
-                        }}
-                      >
-                        Min
-                      </th>
-                      <th
-                        style={{
-                          textAlign: "right",
-                          padding: "6px 8px",
-                          borderBottom: "1px solid #e5e7eb",
-                        }}
-                      >
-                        Max
-                      </th>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "6px 8px",
-                          borderBottom: "1px solid #e5e7eb",
-                        }}
-                      >
-                        Avg (bar)
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {metricSummary.map((m) => {
-                      const ratio =
-                        maxAvgValue > 0
-                          ? Math.min(Math.abs(m.avg) / maxAvgValue, 1)
-                          : 0;
-                      const barWidth = `${ratio * 100}%`;
-
-                      return (
-                        <tr key={m.name}>
-                          <td
-                            style={{
-                              padding: "6px 8px",
-                              borderBottom: "1px solid #f3f4f6",
-                              fontFamily: "monospace",
-                            }}
-                          >
-                            {m.name}
-                          </td>
-                          <td
-                            style={{
-                              padding: "6px 8px",
-                              borderBottom: "1px solid #f3f4f6",
-                              textAlign: "right",
-                            }}
-                          >
-                            {m.count}
-                          </td>
-                          <td
-                            style={{
-                              padding: "6px 8px",
-                              borderBottom: "1px solid #f3f4f6",
-                              textAlign: "right",
-                            }}
-                          >
-                            {m.min.toFixed(2)}
-                          </td>
-                          <td
-                            style={{
-                              padding: "6px 8px",
-                              borderBottom: "1px solid #f3f4f6",
-                              textAlign: "right",
-                            }}
-                          >
-                            {m.max.toFixed(2)}
-                          </td>
-                          <td
-                            style={{
-                              padding: "6px 8px",
-                              borderBottom: "1px solid #f3f4f6",
-                            }}
-                          >
-                            <div
-                              style={{
-                                position: "relative",
-                                height: 10,
-                                borderRadius: 9999,
-                                background: "#e5e7eb",
-                                overflow: "hidden",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  inset: 0,
-                                  width: barWidth,
-                                  background: "#2563eb",
-                                }}
-                              />
-                            </div>
-                            <span
-                              style={{
-                                fontSize: 10,
-                                color: "#6b7280",
-                                marginLeft: 4,
-                              }}
-                            >
-                              {m.avg.toFixed(2)}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
 
           {/* Optional raw snapshot for debugging */}
           <details>
