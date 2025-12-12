@@ -86,23 +86,25 @@ export default function HomePage() {
   const [swaggerVisible, setSwaggerVisible] = useState(false);
 
   // NEW: metrics snapshot state for the right-hand panel
-  const [metricsPreview, setMetricsPreview] = useState<string>("Loading...");
+  // NEW: metrics snapshot state for the right-hand panel
+  const [metricsPreview, setMetricsPreview] = useState<string>("");
   const [metricsError, setMetricsError] = useState<string | null>(null);
+  const [metricsRows, setMetricsRows] = useState<MetricRow[]>([]);
+  const [metricsLastUpdated, setMetricsLastUpdated] = useState<string | null>(
+    null
+  );
 
-  // Fetch a small snapshot of /metrics from the demo service
-  useEffect(() => {
-    if (!PLATFORM_METRICS_URL) {
-      setMetricsPreview("No metrics URL configured. Set NEXT_PUBLIC_PLATFORM_METRICS_URL.");
-      return;
-    }
-
-    fetch(PLATFORM_METRICS_URL)
+  // Fetch a small snapshot of /metrics from the live service
+   // Fetch a small snapshot of /metrics from the live service
+   useEffect(() => {
+    fetch("/api/metrics")
       .then(async (res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const text = await res.text();
+  
+        // Show only first 20 lines as preview
         const previewText = text.split("\n").slice(0, 20).join("\n");
+  
         setMetricsPreview(previewText);
       })
       .catch((err) => {
@@ -111,6 +113,8 @@ export default function HomePage() {
         setMetricsPreview("Unable to load metrics snapshot.");
       });
   }, []);
+  
+
 
   // Build ServiceSpec from UI state
   function buildSpec(): ServiceSpec {
@@ -211,6 +215,47 @@ export default function HomePage() {
     }
   }
 
+    // Build a simple grouped summary by metric name (min/max/avg)
+    const metricSummary = (() => {
+      if (!metricsRows.length) return [];
+  
+      const byName = new Map<
+        string,
+        { name: string; count: number; min: number; max: number; sum: number }
+      >();
+  
+      for (const row of metricsRows) {
+        const existing = byName.get(row.name);
+        if (!existing) {
+          byName.set(row.name, {
+            name: row.name,
+            count: 1,
+            min: row.value,
+            max: row.value,
+            sum: row.value,
+          });
+        } else {
+          existing.count += 1;
+          existing.sum += row.value;
+          existing.min = Math.min(existing.min, row.value);
+          existing.max = Math.max(existing.max, row.value);
+        }
+      }
+  
+      return Array.from(byName.values())
+        .map((m) => ({
+          ...m,
+          avg: m.sum / m.count,
+        }))
+        .sort((a, b) => b.avg - a.avg) // top by avg
+        .slice(0, 8); // limit for display
+    })();
+  
+    const maxAvgValue =
+      metricSummary.length > 0
+        ? Math.max(...metricSummary.map((m) => Math.abs(m.avg)))
+        : 0;
+  
   return (
     <main
       style={{
@@ -231,19 +276,7 @@ export default function HomePage() {
 
         {/* Top actions */}
         <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {/* Toggle example Swagger YAML */}
-          <button
-            style={{
-              padding: "6px 12px",
-              borderRadius: 6,
-              border: "1px solid #ccc",
-              background: "#f5f5f5",
-              cursor: "pointer",
-            }}
-            onClick={() => setSwaggerVisible((v) => !v)}
-          >
-            {swaggerVisible ? "Hide Swagger Doc Example" : "Show Swagger Doc Example"}
-          </button>
+  
 
           {/* NEW: open live docs from demo service */}
           <button
@@ -664,62 +697,281 @@ export default function HomePage() {
           )}
 
           {/* NEW: platform metrics snapshot */}
+          {/* Platform metrics snapshot – nicer UI */}
           <hr style={{ margin: "16px 0", borderColor: "#eee" }} />
           <h3 style={{ marginTop: 0 }}>Platform Metrics Snapshot</h3>
           <p style={{ fontSize: 12, color: "#555", marginBottom: 8 }}>
-            Live Prometheus-style metrics from the demo service. Use this to
-            showcase platform observability (e.g. <code>http_request_duration_ms</code>).
+            Live Prometheus-style metrics from your running service (if
+            configured). Use this to highlight platform health and
+            observability.
           </p>
 
-          <button
+          <div
             style={{
-              padding: "6px 10px",
-              borderRadius: 4,
-              border: "1px solid #ccc",
-              background: PLATFORM_METRICS_URL ? "#f5f5f5" : "#eee",
-              cursor: PLATFORM_METRICS_URL ? "pointer" : "not-allowed",
-              fontSize: 11,
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+              alignItems: "center",
               marginBottom: 8,
             }}
-            disabled={!PLATFORM_METRICS_URL}
-            onClick={() => {
-              if (PLATFORM_METRICS_URL) {
-                window.open(
-                  PLATFORM_METRICS_URL,
-                  "_blank",
-                  "noopener,noreferrer"
-                );
-              }
-            }}
           >
-            Open /metrics in new tab
-          </button>
+            <button
+              style={{
+                padding: "6px 10px",
+                borderRadius: 4,
+                border: "1px solid #ccc",
+                background: PLATFORM_METRICS_URL ? "#f5f5f5" : "#eee",
+                cursor: PLATFORM_METRICS_URL ? "pointer" : "not-allowed",
+                fontSize: 11,
+              }}
+              disabled={!PLATFORM_METRICS_URL}
+              onClick={() => {
+                if (PLATFORM_METRICS_URL) {
+                  window.open(
+                    PLATFORM_METRICS_URL,
+                    "_blank",
+                    "noopener,noreferrer"
+                  );
+                }
+              }}
+            >
+              Open /metrics in new tab
+            </button>
 
-          {PLATFORM_METRICS_URL === "" && (
-            <p style={{ fontSize: 11, color: "#b45309" }}>
+            {metricsLastUpdated && (
+              <span style={{ fontSize: 11, color: "#6b7280" }}>
+                Last updated: {metricsLastUpdated}
+              </span>
+            )}
+          </div>
+
+          {!PLATFORM_METRICS_URL && (
+            <p style={{ fontSize: 11, color: "#b45309", marginBottom: 8 }}>
               Set <code>NEXT_PUBLIC_PLATFORM_METRICS_URL</code> in{" "}
               <code>.env.local</code> to enable live metrics.
             </p>
           )}
 
-          <pre
-            style={{
-              marginTop: 4,
-              padding: 8,
-              background: "#111827",
-              color: "#e5e7eb",
-              borderRadius: 6,
-              fontFamily: "monospace",
-              fontSize: 11,
-              maxHeight: 220,
-              overflow: "auto",
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            {metricsError
-              ? `${metricsPreview}\n\nError: ${metricsError}`
-              : metricsPreview}
-          </pre>
+          {metricsError && PLATFORM_METRICS_URL && (
+            <div
+              style={{
+                marginBottom: 8,
+                padding: 8,
+                borderRadius: 6,
+                border: "1px solid #fecaca",
+                background: "#fef2f2",
+                color: "#b91c1c",
+                fontSize: 11,
+              }}
+            >
+              Error loading metrics: {metricsError}
+            </div>
+          )}
+
+          {metricSummary.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: 11,
+                  color: "#6b7280",
+                  marginBottom: 4,
+                }}
+              >
+                <span>Top metrics by average value</span>
+                <span>Total series: {metricsRows.length}</span>
+              </div>
+
+              <div
+                style={{
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 6,
+                  overflow: "hidden",
+                }}
+              >
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontSize: 11,
+                  }}
+                >
+                  <thead
+                    style={{
+                      background: "#f3f4f6",
+                    }}
+                  >
+                    <tr>
+                      <th
+                        style={{
+                          textAlign: "left",
+                          padding: "6px 8px",
+                          borderBottom: "1px solid #e5e7eb",
+                        }}
+                      >
+                        Metric
+                      </th>
+                      <th
+                        style={{
+                          textAlign: "right",
+                          padding: "6px 8px",
+                          borderBottom: "1px solid #e5e7eb",
+                        }}
+                      >
+                        Count
+                      </th>
+                      <th
+                        style={{
+                          textAlign: "right",
+                          padding: "6px 8px",
+                          borderBottom: "1px solid #e5e7eb",
+                        }}
+                      >
+                        Min
+                      </th>
+                      <th
+                        style={{
+                          textAlign: "right",
+                          padding: "6px 8px",
+                          borderBottom: "1px solid #e5e7eb",
+                        }}
+                      >
+                        Max
+                      </th>
+                      <th
+                        style={{
+                          textAlign: "left",
+                          padding: "6px 8px",
+                          borderBottom: "1px solid #e5e7eb",
+                        }}
+                      >
+                        Avg (bar)
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {metricSummary.map((m) => {
+                      const ratio =
+                        maxAvgValue > 0
+                          ? Math.min(Math.abs(m.avg) / maxAvgValue, 1)
+                          : 0;
+                      const barWidth = `${ratio * 100}%`;
+
+                      return (
+                        <tr key={m.name}>
+                          <td
+                            style={{
+                              padding: "6px 8px",
+                              borderBottom: "1px solid #f3f4f6",
+                              fontFamily: "monospace",
+                            }}
+                          >
+                            {m.name}
+                          </td>
+                          <td
+                            style={{
+                              padding: "6px 8px",
+                              borderBottom: "1px solid #f3f4f6",
+                              textAlign: "right",
+                            }}
+                          >
+                            {m.count}
+                          </td>
+                          <td
+                            style={{
+                              padding: "6px 8px",
+                              borderBottom: "1px solid #f3f4f6",
+                              textAlign: "right",
+                            }}
+                          >
+                            {m.min.toFixed(2)}
+                          </td>
+                          <td
+                            style={{
+                              padding: "6px 8px",
+                              borderBottom: "1px solid #f3f4f6",
+                              textAlign: "right",
+                            }}
+                          >
+                            {m.max.toFixed(2)}
+                          </td>
+                          <td
+                            style={{
+                              padding: "6px 8px",
+                              borderBottom: "1px solid #f3f4f6",
+                            }}
+                          >
+                            <div
+                              style={{
+                                position: "relative",
+                                height: 10,
+                                borderRadius: 9999,
+                                background: "#e5e7eb",
+                                overflow: "hidden",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  inset: 0,
+                                  width: barWidth,
+                                  background: "#2563eb",
+                                }}
+                              />
+                            </div>
+                            <span
+                              style={{
+                                fontSize: 10,
+                                color: "#6b7280",
+                                marginLeft: 4,
+                              }}
+                            >
+                              {m.avg.toFixed(2)}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Optional raw snapshot for debugging */}
+          <details>
+            <summary
+              style={{
+                fontSize: 11,
+                color: "#6b7280",
+                cursor: "pointer",
+                marginBottom: 4,
+              }}
+            >
+              Raw metrics snapshot (first 20 lines)
+            </summary>
+            <pre
+              style={{
+                marginTop: 4,
+                padding: 8,
+                background: "#111827",
+                color: "#e5e7eb",
+                borderRadius: 6,
+                fontFamily: "monospace",
+                fontSize: 11,
+                maxHeight: 180,
+                overflow: "auto",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {PLATFORM_METRICS_URL
+                ? metricsPreview || "(no preview text)"
+                : "Configure NEXT_PUBLIC_PLATFORM_METRICS_URL to see raw metrics."}
+            </pre>
+          </details>
+
+
         </aside>
       </div>
     </main>

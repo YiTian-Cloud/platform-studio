@@ -1,0 +1,161 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Platform Studio API",
+    "version": "1.0.0",
+    "description": "API for generating and previewing service scaffolds in Platform Studio."
+  },
+  "paths": {
+    "/api/preview": {
+      "post": {
+        "summary": "Preview scaffolded file tree for a service",
+        "description": "Takes a ServiceSpec and returns a list of files that would be generated, without creating a ZIP.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceSpec"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preview of generated files",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "files": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "List of file paths that would be generated."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid spec"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/scaffold": {
+      "post": {
+        "summary": "Generate and download service scaffold as ZIP",
+        "description": "Takes a ServiceSpec and returns a ZIP archive containing a production-ready service scaffold.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceSpec"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Service scaffold ZIP",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid spec"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ServiceSpec": {
+        "type": "object",
+        "properties": {
+          "serviceName": {
+            "type": "string",
+            "example": "billing-service"
+          },
+          "purpose": {
+            "type": "string",
+            "example": "Handles invoices and payment webhooks"
+          },
+          "ingress": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["http", "kafka", "s3"]
+            }
+          },
+          "storage": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["postgres", "mongodb", "s3"]
+            }
+          },
+          "enableAuthJwt": { "type": "boolean" },
+          "enableRateLimiting": { "type": "boolean" },
+          "enableLogging": { "type": "boolean" },
+          "enableMetrics": { "type": "boolean" },
+          "enableTracing": { "type": "boolean" },
+          "enableAutomatedTests": { "type": "boolean" },
+          "enableDebugToolkit": { "type": "boolean" },
+          "enableObsDashboard": { "type": "boolean" },
+          "enableOpenAPI": { "type": "boolean" },
+          "enableCICD": { "type": "boolean" },
+          "exposeAsRest": { "type": "boolean" },
+          "deployAsContainer": { "type": "boolean" },
+          "connectToEventBus": { "type": "boolean" },
+          "enableServiceClients": { "type": "boolean" },
+          "downstreamServices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": { "type": "string", "example": "userService" },
+                "name": { "type": "string", "example": "User Service" },
+                "baseUrl": {
+                  "type": "string",
+                  "example": "https://api.myco.com/user-service"
+                },
+                "authType": {
+                  "type": "string",
+                  "example": "platform-jwt"
+                },
+                "timeoutMs": {
+                  "type": "integer",
+                  "example": 3000
+                },
+                "retryPolicy": {
+                  "type": "string",
+                  "example": "exponential"
+                }
+              },
+              "required": ["key", "name", "baseUrl"]
+            }
+          }
+        },
+        "required": ["serviceName"]
+      }
+    }
+  }
+}
