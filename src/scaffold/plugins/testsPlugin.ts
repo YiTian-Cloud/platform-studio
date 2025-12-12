@@ -3,6 +3,14 @@ import { FileTree, addFile } from "../fileTree";
 import { ServiceSpec } from "../types";
 import { safeJsonParse } from "../utils/safeJson";
 
+type PackageJson = {
+  name: string;
+  version: string;
+  dependencies: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  scripts?: Record<string, string>;
+};
+
 export const testsPlugin: ScaffoldPlugin = {
   id: "tests",
 
@@ -11,11 +19,14 @@ export const testsPlugin: ScaffoldPlugin = {
   apply: (_spec: ServiceSpec, tree: FileTree): FileTree => {
     const pkgPath = "package.json";
     //const pkg = JSON.parse(tree[pkgPath]);
-    const pkg = safeJsonParse(tree[pkgPath], {
+    const pkg: PackageJson = safeJsonParse<PackageJson>(tree[pkgPath], {
       name: _spec.serviceName || "my-service",
       version: "0.1.0",
       dependencies: {},
+      devDependencies: {},
+      scripts: {},
     });
+    
     pkg.devDependencies = {
       ...pkg.devDependencies,
       jest: "^29.7.0",
