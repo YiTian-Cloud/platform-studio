@@ -1,36 +1,146 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+platform-studio
 
-## Getting Started
+A low-code service scaffolding studio with built-in platform capabilities
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/YiTian-Cloud/platform-studio&env=NEXT_PUBLIC_PLATFORM_DOCS_URL)
 
-First, run the development server:
 
-```bash
+Live Demo: https://platform-studio.vercel.app/
+ (update after deployment)
+
+Overview
+
+platform-studio is a low-code scaffolding and platform-service generator that enables developers to create new backend services—with production-ready patterns—in seconds.
+
+The studio provides:
+
+A wizard-based UI to select plugins (auth, metrics, events, observability, etc.)
+
+Instant preview of the generated file tree
+
+Built-in support for Swagger/OpenAPI docs
+
+Local-friendly config for both metrics and Swagger rendering
+
+Strong foundations for agentic AI services, platform engineering, and service modernization
+
+This project demonstrates a developer experience–first approach to building internal platforms and golden paths.
+
+Key Features
+⭐ Low-Code Service Creation
+
+Wizard to configure service metadata and platform plugins
+
+Auto-generated folder structure
+
+Ready-to-use controllers, routes, tests, CI templates, and Docker assets
+
+🔌 Platform Plugins
+
+Toggle any combination of plugins, including:
+
+authJwtPlugin – Secure-by-default JWT authentication
+
+metricPlugin – Metrics endpoint + middleware
+
+estsPlugin – End-to-end test scaffolding
+
+debugToolkitPlugin – Debug utilities for development
+
+obsDashboardPlugin – Observability boilerplate
+
+containerizationPlugin – Dockerfile + compose setup
+
+eventBusPlugin – Event emitter/subscriber foundation
+
+serviceClientsPlugin – Typed downstream service client library
+
+📘 Built-in Swagger Viewer
+
+Landing page includes a "View Swagger Doc" button
+
+Supports both local and production (Vercel) environments
+
+Fully OpenAPI-compliant
+
+🧪 CI/CD Ready
+
+Generated services include:
+
+ESLint configuration
+
+Jest unit and API test scaffolding
+
+GitHub Actions workflow (build + test)
+
+Dockerfile validation
+
+Architecture Principles
+
+API-first, contract-first development
+
+Event-driven extensibility
+
+Secure-by-default routing and middleware
+
+Unified platform services via plugins
+
+Local-first development environment
+
+Getting Started
+1. Install dependencies
+npm install
+
+2. Start local development
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Visit the studio at:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+http://localhost:3000
 
-## Learn More
+3. Create a new service
 
-To learn more about Next.js, take a look at the following resources:
+Open the wizard
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Select plugins
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Preview the generated project structure
 
-## Deploy on Vercel
+Download the scaffold
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Deploy to Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Click below to deploy your own instance:
+
+You will be prompted to enter:
+
+NEXT_PUBLIC_PLATFORM_DOCS_URL=https://your-docs-url.com
+
+
+(You can leave it empty if not using external docs.)
+
+Project Structure
+app/
+  page.tsx               # Main wizard
+  swagger/               # Swagger UI viewer
+src/
+  scaffold/              # Service generator logic
+  plugins/               # Toggleable platform plugins
+  components/            # Shared UI components
+public/
+  logo.svg
+README.md
+
+Roadmap
+
+AI-powered service spec generator
+
+Plugin marketplace
+
+Multi-template service generation (HTTP, events, workers, agents)
+
+Infrastructure modules for AWS/GCP deployments
+
+License
+
+MIT License.
